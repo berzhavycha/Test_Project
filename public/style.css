@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+:root{
+    --input-color: rgb(201, 199, 199);
+    --btn-bg: rgb(131, 131, 246);
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(211, 228, 243);
+    height: 100vh;
+    font-family: 'Roboto', sans-serif;
+}
+
+.location-form-wrapper {
+    width: 30%;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.location-form-wrapper h2{
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.location-form .location-form-block input{
+    width: 100%;
+    margin-bottom: 10px;
+    border: 1px solid var(--input-color);
+    padding: 8px;
+    border-radius: 5px;
+    outline: none;
+    color: rgb(103, 102, 102);
+}
+
+.location-form .send-location-btn{
+    width: 100%;
+    margin: 10px 0 25px 0;
+    padding: 8px 0;
+    background-color: rgb(131, 131, 246);
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color .2s ease;
+}
+
+.location-form .send-location-btn:hover{
+    background-color: rgb(84, 84, 231);
+}
+
+.location-form p{
+    color: rgb(87, 87, 87);
+    font-size: 14px;
+}
+
+.location-form p button{
+    background-color: transparent;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    color: var(--btn-bg);
+}
