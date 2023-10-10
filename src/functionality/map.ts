@@ -38,7 +38,6 @@ export const displayMarkersWrapper = (latitude: number, longitude: number) => {
 };
 
 
-
 function generatePopup(name: string, address: string, distance: number) {
     return `
         <div class="popup">

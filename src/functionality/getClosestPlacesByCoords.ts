@@ -9,7 +9,7 @@ export async function placeSearch(latitude: number, longitude: number) {
                 radius: `${2000 * i}`,
             });
 
-            if(i === 25) break
+            if (i === 25) break
 
             const results = await fetch(
                 `https://api.foursquare.com/v3/places/search?${searchParams}`,
@@ -26,6 +26,10 @@ export async function placeSearch(latitude: number, longitude: number) {
             places = data.results
             i++
         } while (places?.length < 10)
+
+        if (places?.length < 10) {
+            throw new Error('There is no 10 places that is near you')
+        }
 
         places = places.map((item: any) => ({
             ...item,
@@ -46,7 +50,7 @@ export const calculateDistance = (latitude: number, longitude: number, placeLati
         0.5 - Math.cos(diffLat) / 2 +
         Math.cos(latitude * (Math.PI / 180)) * Math.cos(placeLatitude * (Math.PI / 180)) * (1 - Math.cos(diffLon)) / 2;
 
-    return radiusEarthKm * 2 * Math.asin(Math.sqrt(a))  * 1000;
+    return radiusEarthKm * 2 * Math.asin(Math.sqrt(a)) * 1000;
 }
 
 export const memoizedPlaceSearch = () => {
