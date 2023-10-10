@@ -5,7 +5,6 @@ export async function placeSearch(latitude: number, longitude: number) {
         do {
             const searchParams = new URLSearchParams({
                 ll: `${latitude},${longitude}`,
-                open_now: 'true',
                 radius: `${2000 * i}`,
             });
 
