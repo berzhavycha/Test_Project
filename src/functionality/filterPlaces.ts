@@ -1,5 +1,3 @@
-import { displayMarkersWrapper } from "./map";
-
 export const filterPlacesByCategory = async (event: Event, placeList: any, displayMarkers: Function) => {
     const placesElements: NodeListOf<HTMLButtonElement> = document.querySelectorAll('.place-item');
     const copyArr = [...placeList]

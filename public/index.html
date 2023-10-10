@@ -31,15 +31,16 @@
             <h2>Give us your location!</h2>
             <div class="location-form-block">
                 <input id="latitude" type="text" placeholder="Enter your latitude">
-                <!-- <span class="error-message"></span> -->
             </div>
             <div class="location-form-block">
                 <input id="longitude" type="text" placeholder="Enter your longitude">
-                <!-- <span class="error-message"></span> -->
+            </div>
+            <div class="error-block">
+                <span class="error-message">Invalid input. Please enter valid latitude and longitude.</span>
             </div>
             <button type="submit" class="send-location-btn">Send Location</button>
             <div class="location-form-bottom">
-                <p>Don`t know your location? <button type="submit">Find it out!</button></p>
+                <p>Don`t know your location? <a class="find-location-button" type="button">Find it out!</a></p>
             </div>
         </form>
     </div>
