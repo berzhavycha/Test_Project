@@ -6,6 +6,25 @@ export function getLocation(): any {
   }
 }
 
+
+export const customLocation = () => {
+  let latitude: number = 0;
+  let longitude: number = 0;
+
+  const setCoords = (lat: number, lon: number) => {
+    latitude = lat;
+    longitude = lon;
+  };
+
+  const getCoords = () => ({ latitude, longitude });
+
+  return {
+    setCoords,
+    getCoords,
+  };
+}
+
+
 function showPosition(position: GeolocationPosition) {
   const latitude = position.coords.latitude;
   const longitude = position.coords.longitude;
