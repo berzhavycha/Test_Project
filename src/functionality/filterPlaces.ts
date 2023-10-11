@@ -1,4 +1,6 @@
-export const filterPlacesByCategory = (event: Event, placeList: any, displayMarkers: Function) => {
+import { IPlace } from "../interfaces";
+
+export const filterPlacesByCategory = (event: Event, placeList: IPlace[]): IPlace[] => {
     const placesElements: NodeListOf<HTMLButtonElement> = document.querySelectorAll('.place-item');
     const copyArr = [...placeList]
 
@@ -21,7 +23,9 @@ export const filterPlacesByCategory = (event: Event, placeList: any, displayMark
             }
             index++
         });
+
+        return copyArr
     }
 
-    displayMarkers(copyArr)
+    return []
 };

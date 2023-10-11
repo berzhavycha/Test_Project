@@ -1,17 +1,17 @@
 import { getLocation } from "./getUserLocation";
 import { memoizedPlaceSearch } from "./getClosestPlacesByCoords";
-import { generetePlacesList } from "./generetePlacesList";
-import { generetePlacesCategoryBtns } from "./generatePlacesCategoryBtn";
+import { generetePlacesList } from "./generatePlacesList";
+import { generatePlacesCategoryBtns } from "./generatePlacesCategoryBtn";
 import { filterPlacesByCategory } from "./filterPlaces";
-import { displayMarkersWrapper } from "./map";
+import { subject } from "../Observer/Subject";
+import { MapObserver } from "../Observer/MapObserver";
+import { IPlace } from "../interfaces";
 
-const placeSearch = memoizedPlaceSearch()
 
 export const submitForm = async (event: Event) => {
     event.preventDefault();
 
-    let nearestPlaces: any = null
-    let displayMarkers: Function
+    let nearestPlaces: IPlace[] = []
 
     if (event.target && event.target instanceof HTMLFormElement) {
 
@@ -28,6 +28,9 @@ export const submitForm = async (event: Event) => {
             const longitude: number = parseFloat(longitudeInput.value)
 
             if (sendLocationBtn && event.target.contains(sendLocationBtn)) {
+
+                sendLocationBtn.innerText = 'Loading...'
+
                 try {
                     if (isNaN(latitude) || isNaN(longitude)) {
 
@@ -38,7 +41,7 @@ export const submitForm = async (event: Event) => {
                         return
                     }
 
-                    nearestPlaces = await placeSearch(latitude, longitude);
+                    nearestPlaces = await memoizedPlaceSearch(latitude, longitude);
 
                     if (formElement) {
                         formElement.style.display = 'none'
@@ -46,12 +49,14 @@ export const submitForm = async (event: Event) => {
                         formElement.style.visibility = 'hidden'
                     }
 
-                    displayMarkers = displayMarkersWrapper(latitude, longitude)
+                    const mapObserver = new MapObserver(latitude, longitude)
+                    subject.subscribeObserver(mapObserver)
 
                     displayPlaces(nearestPlaces)
-                    displayMarkers(nearestPlaces)
-                } catch (error) {
+                    subject.updateState({ data: nearestPlaces, error: null })
+                } catch (error: any) {
                     console.error(error);
+                    subject.updateState({ data: [], error: error })
                 }
 
             }
@@ -59,9 +64,12 @@ export const submitForm = async (event: Event) => {
             const filterBtnsContainer: HTMLElement | null = document.querySelector('.filter-btns');
             if (filterBtnsContainer) {
                 filterBtnsContainer.addEventListener('click', (e) => {
+
+                    let resultArr: IPlace[] = []
                     const target = e.target as HTMLButtonElement;
                     if (target && target.tagName === 'BUTTON') {
-                        filterPlacesByCategory(e, nearestPlaces, displayMarkers);
+                        resultArr = filterPlacesByCategory(e, nearestPlaces);
+                        subject.updateState({ data: resultArr, error: null })
                     }
                 });
             }
@@ -84,20 +92,20 @@ export const findUserLocation = async (e: Event) => {
     }
 }
 
-const getAllCategories = (arr: any[]) => {
+const getAllCategories = (arr: IPlace[]) => {
     return arr.reduce((acc, item) => {
-        const category = item.categories[0].name
+        const category: string = item.categories[0].name
         if (!acc.includes(category)) {
             acc.push(category)
         }
 
         return acc
-    }, [])
+    }, [] as string[])
 }
 
-const displayPlaces = (list: any[]) => {
+export const displayPlaces = (list: IPlace[]) => {
     const placesHTMLlist = generetePlacesList(list)
-    const placesCategoryFilterBtns = generetePlacesCategoryBtns(getAllCategories(list))
+    const placesCategoryFilterBtns = generatePlacesCategoryBtns(getAllCategories(list))
 
     const placeListElement: HTMLDivElement | null = document.querySelector('.place-list') as HTMLDivElement | null
 

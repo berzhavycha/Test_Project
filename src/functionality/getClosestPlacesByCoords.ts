@@ -1,16 +1,26 @@
+import { IPlace } from "../interfaces";
+import { fetchPlaces } from "../queryBuilders/placeQueryBuilder";
+import { snakeToCamel } from "./snakeToCamel";
+
+const RADIUS = 100;
+const MAX_ATTEMPTS = 25;
+const MIN_PLACES = 10;
+
+interface INormalizedPlaces {
+    [id: string]: IPlace
+}
+
 export async function placeSearch(latitude: number, longitude: number) {
     try {
-        let places = null
+        let allPlaces: INormalizedPlaces = {}
         let i = 1
         do {
             const searchParams = new URLSearchParams({
                 ll: `${latitude},${longitude}`,
-                radius: `${2000 * i}`,
+                radius: `${RADIUS * i}`,
             });
 
-            if (i === 25) break
-
-            const results = await fetch(
+            const response = await fetch(
                 `https://api.foursquare.com/v3/places/search?${searchParams}`,
                 {
                     method: 'GET',
@@ -21,21 +31,33 @@ export async function placeSearch(latitude: number, longitude: number) {
                 }
             )
 
-            const data = await results.json();
-            places = data.results
-            i++
-        } while (places?.length < 10)
 
-        if (places?.length < 10) {
+            if (!response.ok) {
+                throw new Error("Fetch places error!")
+            }
+
+            const data = await response.json();
+            const places = data.results
+
+            places.forEach((place: IPlace) => {
+                if (!allPlaces[place.fsq_id]) {
+                    allPlaces[place.fsq_id] = place
+                }
+            })
+
+            i++
+        } while (Object.keys(allPlaces).length <= MIN_PLACES ?? i <= MAX_ATTEMPTS)
+
+        if (Object.keys(allPlaces).length < MIN_PLACES) {
             throw new Error('There is no 10 places that is near you')
         }
 
-        places = places.map((item: any) => ({
+        const placesWithDistance = Object.values(allPlaces).map((item: IPlace) => ({
             ...item,
             distanceToPlace: Math.trunc(calculateDistance(latitude, longitude, item.geocodes.main.latitude, item.geocodes.main.longitude))
         }))
 
-        return places.sort((a: any, b: any) => a.distanceToPlace - b.distanceToPlace)
+        return placesWithDistance.sort((a: IPlace, b: IPlace) => a.distanceToPlace - b.distanceToPlace).slice(0, 10).map(snakeToCamel);
     } catch (err) {
         console.error(err);
     }
@@ -52,16 +74,28 @@ export const calculateDistance = (latitude: number, longitude: number, placeLati
     return radiusEarthKm * 2 * Math.asin(Math.sqrt(a)) * 1000;
 }
 
-export const memoizedPlaceSearch = () => {
-    const cache = new Map()
+export const memoizedPlaceSearch = async (latitude: number, longitude: number) => {
+    const cacheKey = 'placeSearchCache'
+    const cachedData = localStorage.getItem(cacheKey)
+    const cache = cachedData ? new Map(JSON.parse(cachedData)) : new Map()
+    const key = `${latitude}:${longitude}`
 
-    return async function (latitude: number, longitude: number) {
-        if (cache.has(`${latitude}:${longitude}`)) {
-            return cache.get(`${latitude}:${longitude}`)
+    for (const [key, result] of cache.entries()) {
+        const [cachedLat, cachedLon] = key.split(':').map(parseFloat)
+        const distance = calculateDistance(latitude, longitude, cachedLat, cachedLon)
+
+        if (distance <= 50) {
+            return result
         }
-
-        const result = await placeSearch(latitude, longitude)
-        cache.set(`${latitude}:${longitude}`, result)
-        return result
     }
+
+    if (cache.has(key)) {
+        return cache.get(key)
+    }
+
+    const result = await placeSearch(latitude, longitude)
+    cache.set(key, result)
+    localStorage.setItem(cacheKey, JSON.stringify(Array.from(cache.entries())))
+
+    return result
 }
