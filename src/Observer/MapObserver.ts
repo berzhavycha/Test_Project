@@ -5,9 +5,11 @@ export interface IObserver {
     update(subject: ISubject): void
 }
 
+
+
 export class MapObserver implements IObserver {
     private L: any
-    private map: L.Map
+    private map: any
     private latitude: number
     private longitude: number
 

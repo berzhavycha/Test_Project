@@ -31,7 +31,6 @@ export async function placeSearch(latitude: number, longitude: number) {
                 }
             )
 
-
             if (!response.ok) {
                 throw new Error("Fetch places error!")
             }

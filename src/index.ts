@@ -1,8 +1,7 @@
-import { findUserLocation, submitForm } from "./functionality/submitForm";
+import { CPlacesModel } from "./models/place.model";
+import { CPlaceView } from "./view/place.view";
+import { CPlaceController } from "./controllers/place.controller";
 
-const form: HTMLFormElement | null = document.querySelector('.location-form');
-form?.addEventListener('submit', submitForm);
 
-const findUserLocationButton: HTMLAnchorElement | null = document.querySelector('.find-location-button')
-findUserLocationButton?.addEventListener('click', findUserLocation)
 
+const app = new CPlaceController(new CPlacesModel(), new CPlaceView())

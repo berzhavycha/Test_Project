@@ -1,13 +1,12 @@
-const path = require('path')
 const webpack = require('webpack')
-const dotenv = require('dotenv').config({ path: __dirname + '/.env' })
-
+const path = require('path')
+const dotenv = require('dotenv')
+dotenv.config({ path: __dirname + '/.env' });
 
 module.exports = {
     plugins: [
         new webpack.DefinePlugin({
-            'process.env.FOURSQUARE_PLACES_API_KEY': JSON.stringify(process.env.FOURSQUARE_PLACES_API_KEY),
-            'process.env.FOURSQUARE_PLACES_API_BASE_URL': JSON.stringify(process.env.FOURSQUARE_PLACES_API_BASE_URL),
+            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
         }),
     ],
     entry: './src/index.ts',
