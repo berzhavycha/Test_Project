@@ -1,5 +1,6 @@
 import { IPlace } from "../interfaces"
 import * as L from 'leaflet';
+import { getLocation } from "../utils/getUserLocation";
 
 
 export interface IObserver {
@@ -29,6 +30,57 @@ export class CPlaceView implements IObserver {
     public L: any
     public mapLayer: any
 
+    constructor() {
+        this.app = this.getElement('#root')
+
+        this.container = this.createElement('div', 'container')
+        this.mainInner = this.createElement('div', 'main-inner')
+        this.placeList = this.createElement('div', 'place-list')
+        this.map = this.createElement('div', undefined, 'map')
+
+        this.locationFormWrapper = this.createElement('div', 'location-form-wrapper')
+        this.locationForm = this.createElement('form', 'location-form')
+        this.locationFormHeader = this.createElement('h2', undefined)
+        this.locationFormHeader.innerText = 'Give us your location!'
+
+        this.latFormBlock = this.createElement('div', 'location-form-block')
+        this.latInput = this.createInputElement('latitude')
+
+        this.lonFormBlock = this.createElement('div', 'location-form-block')
+        this.lonInput = this.createInputElement('longitude')
+
+        this.errorBlock = this.createElement('div', 'error-block')
+        this.errorSpan = this.createElement('span', 'error-message')
+        this.errorSpan.innerText = 'Invalid input. Please enter valid latitude and longitude.'
+
+        this.submitBtn = this.createElement('button', 'send-location-btn') as HTMLButtonElement
+        this.submitBtn.innerText = 'Send Location'
+        this.submitBtn.type = 'submit'
+
+        this.locationFormBottom = this.createElement('div', 'location-form-bottom')
+        this.pElem = this.createElement('p', undefined)
+        this.pElem.innerText = 'Don`t know your location? '
+        this.aElem = this.createElement('a', 'find-location-button')
+        this.aElem.innerText = 'Find it out!'
+        this.aElem.onclick = async () => {
+            const { latitude, longitude } = await getLocation()
+            this.latInput.value = `${latitude}`
+            this.lonInput.value = `${longitude}`
+        }
+
+        this.app?.append(this.container, this.locationFormWrapper)
+        this.container.append(this.mainInner)
+        this.mainInner.append(this.placeList, this.map)
+
+        this.locationFormWrapper.append(this.locationForm)
+        this.locationForm.append(this.locationFormHeader, this.latFormBlock, this.lonFormBlock, this.errorBlock, this.submitBtn, this.locationFormBottom)
+
+        this.latFormBlock.append(this.latInput)
+        this.lonFormBlock.append(this.lonInput)
+        this.errorBlock.append(this.errorSpan)
+        this.locationFormBottom.append(this.pElem)
+        this.pElem.append(this.aElem)
+    }
 
     private generetePlacesList = (list: IPlace[]) => {
         return list.map((item: any) => (
@@ -72,56 +124,15 @@ export class CPlaceView implements IObserver {
         `
     }
 
-    constructor() {
-        this.app = this.getElement('#root')
+    private createInputElement(id: string) {
+        const input = this.createElement('input', undefined, id) as HTMLInputElement
+        input.type = 'text'
+        input.placeholder = `Enter your ${id}`
 
-        this.container = this.createElement('div', 'container')
-        this.mainInner = this.createElement('div', 'main-inner')
-        this.placeList = this.createElement('div', 'place-list')
-        this.map = this.createElement('div', undefined, 'map')
-
-        this.locationFormWrapper = this.createElement('div', 'location-form-wrapper')
-        this.locationForm = this.createElement('form', 'location-form')
-        this.locationFormHeader = this.createElement('h2', undefined)
-        this.locationFormHeader.innerText = 'Give us your location!'
-
-        this.latFormBlock = this.createElement('div', 'location-form-block')
-        this.latInput = this.createElement('input', undefined, 'latitude') as HTMLInputElement
-        this.latInput.type = 'text'
-        this.latInput.placeholder = 'Enter your latitude'
-
-        this.lonFormBlock = this.createElement('div', 'location-form-block')
-        this.lonInput = this.createElement('input', undefined, 'longitude') as HTMLInputElement
-        this.lonInput.type = 'text'
-        this.lonInput.placeholder = 'Enter your longitude'
-
-        this.errorBlock = this.createElement('div', 'error-block')
-        this.errorSpan = this.createElement('span', 'error-message')
-        this.errorSpan.innerText = 'Invalid input. Please enter valid latitude and longitude.'
-
-        this.submitBtn = this.createElement('button', 'send-location-btn') as HTMLButtonElement
-        this.submitBtn.innerText = 'Send Location'
-        this.submitBtn.type = 'submit'
-
-        this.locationFormBottom = this.createElement('div', 'location-form-bottom')
-        this.pElem = this.createElement('p', undefined)
-        this.pElem.innerText = 'Don`t know your location? '
-        this.aElem = this.createElement('a', 'find-location-button')
-        this.aElem.innerText = 'Find it out!'
-
-        this.app?.append(this.container, this.locationFormWrapper)
-        this.container.append(this.mainInner)
-        this.mainInner.append(this.placeList, this.map)
-
-        this.locationFormWrapper.append(this.locationForm)
-        this.locationForm.append(this.locationFormHeader, this.latFormBlock, this.lonFormBlock, this.errorBlock, this.submitBtn, this.locationFormBottom)
-
-        this.latFormBlock.append(this.latInput)
-        this.lonFormBlock.append(this.lonInput)
-        this.errorBlock.append(this.errorSpan)
-        this.locationFormBottom.append(this.pElem)
-        this.pElem.append(this.aElem)
+        return input
     }
+
+    
 
     createElement(tag: string, className: string | undefined, id?: string) {
         const element = document.createElement(tag)

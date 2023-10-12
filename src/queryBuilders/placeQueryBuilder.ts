@@ -1,6 +1,6 @@
 const API_HEADERS = {
     Accept: 'application/json',
-    Authorization: `${process.env.FOURSQUARE_PLACES_API_KEY}`,
+    Authorization: `${process.env.FOURSQUARE_PLACES_API_KEY}`
 };
 
 export const fetchPlaces = async (params: URLSearchParams): Promise<any> => {
@@ -9,5 +9,10 @@ export const fetchPlaces = async (params: URLSearchParams): Promise<any> => {
         method: 'GET',
         headers: API_HEADERS,
     });
+
+    if (!response.ok) {
+        throw new Error("Fetch places error!")
+    }
+
     return response.json();
 }

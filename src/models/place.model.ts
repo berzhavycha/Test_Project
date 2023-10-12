@@ -1,4 +1,5 @@
-import { snakeToCamel } from "../functionality/snakeToCamel";
+import { fetchPlaces } from "../queryBuilders/placeQueryBuilder";
+import { snakeToCamel } from "../utils/snakeToCamel";
 import { IObserver } from "../view/place.view";
 
 export interface IPlace {
@@ -29,27 +30,8 @@ export class CPlacesModel {
 
     private observers: IObserver[] = []
 
-    subscribeObserver(observer: IObserver): void {
-        const isExist = this.observers.includes(observer)
-        if (isExist) {
-            throw new Error('Observer has already been subscribe')
-        }
-        this.observers.push(observer)
-    }
-
-    unsubscribeObserver(observer: IObserver): void {
-        const observerIndex = this.observers.indexOf(observer)
-        if (observerIndex > -1) {
-            this.observers.splice(observerIndex, 1)
-        } else {
-            console.log('Observer doesn`t exist')
-        }
-    }
-
-    notifyObservers(list: IPlace[]): void {
-        for (const observer of this.observers) {
-            observer.update(list)
-        }
+    constructor() {
+        this.onPlaceListChanged = () => { }
     }
 
     private calculateDistance = (latitude: number, longitude: number, placeLatitude: number, placeLongitude: number): number => {
@@ -63,7 +45,7 @@ export class CPlacesModel {
         return radiusEarthKm * 2 * Math.asin(Math.sqrt(a)) * 1000;
     }
 
-    private async fetchPlaces(latitude: number, longitude: number) {
+    private async fetchAndSortPlaces(latitude: number, longitude: number) {
         try {
             let allPlaces: INormalizedPlaces = {}
             let i = 1
@@ -73,22 +55,7 @@ export class CPlacesModel {
                     radius: `${RADIUS * i}`,
                 });
 
-                const response = await fetch(
-                    `https://api.foursquare.com/v3/places/search?${searchParams}`,
-                    {
-                        method: 'GET',
-                        headers: {
-                            Accept: 'application/json',
-                            Authorization: 'fsq3C1EEWYk0pgVweHJQ0mELQHwD+jCkfg5zE4y5LV5T/x0=',
-                        }
-                    }
-                )
-
-                if (!response.ok) {
-                    throw new Error("Fetch places error!")
-                }
-
-                const data = await response.json();
+                const data = await fetchPlaces(searchParams);
                 const places = data.results
 
                 places.forEach((place: IPlace) => {
@@ -115,9 +82,27 @@ export class CPlacesModel {
         }
     }
 
-    constructor() {
-        this.places = []
-        this.onPlaceListChanged = () => { }
+    subscribeObserver(observer: IObserver): void {
+        if (this.observers.includes(observer)) {
+            throw new Error('Observer has already been subscribe')
+        }
+
+        this.observers.push(observer)
+    }
+
+    unsubscribeObserver(observer: IObserver): void {
+        const observerIndex = this.observers.indexOf(observer)
+        if (observerIndex > -1) {
+            this.observers.splice(observerIndex, 1)
+        } else {
+            console.log('Observer doesn`t exist')
+        }
+    }
+
+    notifyObservers(list: IPlace[]): void {
+        for (const observer of this.observers) {
+            observer.update(list)
+        }
     }
 
     async memoizedFetchPlace(latitude: number, longitude: number) {
@@ -125,7 +110,6 @@ export class CPlacesModel {
         const cachedData = localStorage.getItem(cacheKey)
         const cache = cachedData ? new Map(JSON.parse(cachedData)) : new Map()
         const key = `${latitude}:${longitude}`
-
 
         for (const [key, result] of cache.entries()) {
             const [cachedLat, cachedLon] = key.split(':').map(parseFloat)
@@ -142,7 +126,7 @@ export class CPlacesModel {
             return cache.get(key)
         }
 
-        const result = await this.fetchPlaces(latitude, longitude)
+        const result = await this.fetchAndSortPlaces(latitude, longitude)
         cache.set(key, result)
         localStorage.setItem(cacheKey, JSON.stringify(Array.from(cache.entries())))
 

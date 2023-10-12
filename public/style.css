@@ -159,6 +159,10 @@ body {
     padding: 5px 15px 10px 15px;
 }
 
+.place-list .place-item:last-child{
+    border-bottom: none;
+}
+
 .place-list .place-item h3 {
     color: rgb(14, 14, 107);
     margin-bottom: 5px;

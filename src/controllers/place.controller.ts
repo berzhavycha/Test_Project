@@ -15,14 +15,16 @@ export class CPlaceController {
         this.model.subscribeObserver(this.view)
     }
 
+    private showErrorBlock() {
+        if (this.view.errorBlock) {
+            this.view.errorBlock.style.display = 'block';
+        }
+    }
+
     handleFetchPlaces(latitude: number, longitude: number) {
-        
+
         if (isNaN(latitude) || isNaN(longitude)) {
-
-            if (this.view.errorBlock) {
-                this.view.errorBlock.style.display = 'block'
-            }
-
+            this.showErrorBlock()
             return
         }
 

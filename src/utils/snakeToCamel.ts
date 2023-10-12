@@ -37,3 +37,4 @@ export const snakeToCamel = (obj: SnakeCaseObject): SnakeCaseObject => {
 
     return camelCaseObj;
 };
+

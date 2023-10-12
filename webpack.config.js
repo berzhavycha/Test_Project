@@ -1,12 +1,15 @@
 const webpack = require('webpack')
 const path = require('path')
-const dotenv = require('dotenv')
-dotenv.config({ path: __dirname + '/.env' });
+
 
 module.exports = {
     plugins: [
-        new webpack.DefinePlugin({
-            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+        new webpack.ProvidePlugin({
+            process: 'process',
+        }),
+        new webpack.EnvironmentPlugin({
+            FOURSQUARE_PLACES_API_BASE_URL: 'https://api.foursquare.com/v3/places/search',
+            FOURSQUARE_PLACES_API_KEY: 'fsq3C1EEWYk0pgVweHJQ0mELQHwD+jCkfg5zE4y5LV5T/x0=',
         }),
     ],
     entry: './src/index.ts',
@@ -22,7 +25,10 @@ module.exports = {
         ]
     },
     resolve: {
-        extensions: ['.ts', '.js']
+        extensions: ['.ts', '.js'],
+        alias: {
+            process: "process/browser"
+        },
     },
     output: {
         publicPath: 'public',
