@@ -81,7 +81,7 @@ export class CPlaceView implements IObserver {
     }
 
     private generetePlacesList = (list: IPlace[]) => {
-        return list.map((item: IPlace) => (
+        return list.map((item) => (
             ` 
             <div class="place-item ${item.categories[0]?.name.split(' ')[0]}">
                 <div class="place-item-info">
@@ -165,6 +165,8 @@ export class CPlaceView implements IObserver {
             this.errorBlock.style.display = 'block';
             this.errorSpan.innerText = error as string
         }
+
+        this.submitBtn.innerText = 'Send Location'
     }
 
     displayPlaces(list: IPlace[]) {
@@ -194,10 +196,7 @@ export class CPlaceView implements IObserver {
             this.placeList.removeChild(this.placeList.firstElementChild.nextElementSibling)
         }
 
-        if (list.length === 0) {
-            const p = this.createElement('p', undefined)
-            this.placeList.append(p)
-        } else {
+        if (list.length) {
             const placesHTMLlist = this.generetePlacesList(list)
 
 
@@ -209,47 +208,49 @@ export class CPlaceView implements IObserver {
 
 
     displayMarkers(list: IPlace[]) {
-        if (!this.L && !this.mapLayer) {
-            this.L = (window as any).L
-            this.mapLayer = this.L.map('map')
-            this.mapLayer.setView([+this.getLatitude(), +this.getLongitude()], 14)
-        }
-
-        this.L.marker([+this.latInput.value, +this.lonInput.value], {
-            title: 'You',
-            icon: this.L.icon({
-                iconUrl: 'https://i.pinimg.com/originals/0f/61/ba/0f61ba72e0e12ba59d30a50295964871.png',
-                iconSize: [70, 70]
-            })
-        }).bindPopup('<h2>You</h2>').addTo(this.mapLayer)
-
-        let markersArray: L.Marker[] = [];
-
-        this.mapLayer.eachLayer((layer: L.Layer) => {
-            if (layer instanceof L.Marker && layer.options.title && layer.options.title !== 'You') {
-                markersArray.push(layer as L.Marker);
+        if (list.length) {
+            if (!this.L && !this.mapLayer) {
+                this.L = (window as any).L
+                this.mapLayer = this.L.map('map')
+                this.mapLayer.setView([+this.getLatitude(), +this.getLongitude()], 14)
             }
-        });
 
-        if (markersArray.length) {
-            for (let i = 0; i < markersArray.length; i++) {
-                this.mapLayer.removeLayer(markersArray[i]);
+            this.L.marker([+this.latInput.value, +this.lonInput.value], {
+                title: 'You',
+                icon: this.L.icon({
+                    iconUrl: 'https://i.pinimg.com/originals/0f/61/ba/0f61ba72e0e12ba59d30a50295964871.png',
+                    iconSize: [70, 70]
+                })
+            }).bindPopup('<h2>You</h2>').addTo(this.mapLayer)
+
+            let markersArray: L.Marker[] = [];
+
+            this.mapLayer.eachLayer((layer: L.Layer) => {
+                if (layer instanceof L.Marker && layer.options.title && layer.options.title !== 'You') {
+                    markersArray.push(layer as L.Marker);
+                }
+            });
+
+            if (markersArray.length) {
+                for (let i = 0; i < markersArray.length; i++) {
+                    this.mapLayer.removeLayer(markersArray[i]);
+                }
+                markersArray = []
             }
-            markersArray = []
+
+
+            this.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(this.mapLayer);
+
+            list.forEach((place) => {
+                const marker = this.L.marker([place.geocodes.main.latitude, place.geocodes.main.longitude], {
+                    title: place.name,
+                }).bindPopup(this.generatePopup(place.name, place.location.address, place.distanceToPlace)).addTo(this.mapLayer);
+                markersArray.push(marker)
+            });
         }
-
-
-        this.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(this.mapLayer);
-
-        list.forEach((place) => {
-            const marker = this.L.marker([place.geocodes.main.latitude, place.geocodes.main.longitude], {
-                title: place.name,
-            }).bindPopup(this.generatePopup(place.name, place.location.address, place.distanceToPlace)).addTo(this.mapLayer);
-            markersArray.push(marker)
-        });
     }
 
     bindFetchPlaces(handler: Function) {

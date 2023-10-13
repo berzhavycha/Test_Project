@@ -109,7 +109,6 @@ export class CPlacesModel extends CSubject {
             }
 
             const result = await this.fetchAndSortPlaces(latitude, longitude)
-            console.log(result)
             cache.set(key, result)
             localStorage.setItem(cacheKey, JSON.stringify(Array.from(cache.entries())))
 
