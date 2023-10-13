@@ -1,11 +1,9 @@
-import { IPlace } from "../interfaces"
 import * as L from 'leaflet';
+
+import { IPlace } from "../interfaces"
 import { getLocation } from "../utils/getUserLocation";
-
-
-export interface IObserver {
-    update(list: IPlace[]): void
-}
+import { CSubject } from '../Observer/Subject';
+import { IObserver } from '../Observer/Observer';
 
 export class CPlaceView implements IObserver {
     public app
@@ -64,8 +62,8 @@ export class CPlaceView implements IObserver {
         this.aElem.innerText = 'Find it out!'
         this.aElem.onclick = async () => {
             const { latitude, longitude } = await getLocation()
-            this.latInput.value = `${latitude}`
-            this.lonInput.value = `${longitude}`
+            this.setLatitude(latitude)
+            this.setLongitude(longitude)
         }
 
         this.app?.append(this.container, this.locationFormWrapper)
@@ -83,13 +81,13 @@ export class CPlaceView implements IObserver {
     }
 
     private generetePlacesList = (list: IPlace[]) => {
-        return list.map((item: any) => (
+        return list.map((item: IPlace) => (
             ` 
-            <div class="place-item ${item.categories[0].name.split(' ')[0]}">
+            <div class="place-item ${item.categories[0]?.name.split(' ')[0]}">
                 <div class="place-item-info">
                     <h3>${item.name}</h3>
-                    <p class="categoty">${item.categories[0].name}</p>
-                    <p class="location"><i class="fa-solid fa-location-dot"></i> ${item.location.formattedAddress}</p>
+                    <p class="categoty">${item.categories[0]?.name}</p>
+                    <p class="location"><i class="fa-solid fa-location-dot"></i> ${item.location.formatted_address}</p>
                     <p class="distance"><i class="fa-solid fa-person-walking"></i> ${item.distanceToPlace} meters away</p>
                 </div>
             </div>
@@ -99,7 +97,7 @@ export class CPlaceView implements IObserver {
 
     private getAllCategories = (arr: IPlace[]) => {
         return arr.reduce((acc, item) => {
-            const category: string = item.categories[0].name
+            const category: string = item.categories[0]?.name
             if (!acc.includes(category)) {
                 acc.push(category)
             }
@@ -109,8 +107,8 @@ export class CPlaceView implements IObserver {
     }
 
     private generatePlacesCategoryBtns(list: string[]) {
-        return list.map((item: any) => (
-            `<button class="category ${item.split(' ')[0]}">${item}</button>`
+        return list.map((item) => (
+            `<button class="category ${item?.split(' ')[0]}">${item}</button>`
         ))
     }
 
@@ -132,8 +130,6 @@ export class CPlaceView implements IObserver {
         return input
     }
 
-    
-
     createElement(tag: string, className: string | undefined, id?: string) {
         const element = document.createElement(tag)
         if (className) element.classList.add(className)
@@ -149,25 +145,32 @@ export class CPlaceView implements IObserver {
     }
 
     getLatitude() {
-        return this.latInput.value
+        return this.latInput.value.trim()
     }
 
-    getlongitude() {
-        return this.lonInput.value
+    getLongitude() {
+        return this.lonInput.value.trim()
     }
 
     setLatitude(lat: number) {
         this.latInput.value = `${lat}`
     }
 
-    setlongitude(lon: number) {
+    setLongitude(lon: number) {
         this.lonInput.value = `${lon}`
+    }
+
+    showErrorBlock(error?: string) {
+        if (this.errorBlock) {
+            this.errorBlock.style.display = 'block';
+            this.errorSpan.innerText = error as string
+        }
     }
 
     displayPlaces(list: IPlace[]) {
         const placeListElement: HTMLDivElement = document.querySelector('.place-list') as HTMLDivElement
 
-        if (this.locationFormWrapper) {
+        if (this.locationFormWrapper && list.length === 10) {
             this.locationFormWrapper.style.display = 'none'
             this.locationFormWrapper.style.opacity = '0'
             this.locationFormWrapper.style.visibility = 'hidden'
@@ -181,7 +184,7 @@ export class CPlaceView implements IObserver {
                 <h2>10 Nearest Places Next to You</h2>
                 <div class="filter-btns">
                  <button>All</button>
-                    ${placesCategoryFilterBtns.join('')}
+                 ${placesCategoryFilterBtns.join('')}
                 </div>
             </div>
             `
@@ -193,7 +196,6 @@ export class CPlaceView implements IObserver {
 
         if (list.length === 0) {
             const p = this.createElement('p', undefined)
-            p.textContent = 'Nothing to do! Add a task?'
             this.placeList.append(p)
         } else {
             const placesHTMLlist = this.generetePlacesList(list)
@@ -210,10 +212,8 @@ export class CPlaceView implements IObserver {
         if (!this.L && !this.mapLayer) {
             this.L = (window as any).L
             this.mapLayer = this.L.map('map')
+            this.mapLayer.setView([+this.getLatitude(), +this.getLongitude()], 14)
         }
-
-        this.mapLayer.setView([+this.latInput.value, +this.lonInput.value], 14)
-
 
         this.L.marker([+this.latInput.value, +this.lonInput.value], {
             title: 'You',
@@ -255,8 +255,9 @@ export class CPlaceView implements IObserver {
     bindFetchPlaces(handler: Function) {
         this.locationForm.addEventListener('submit', event => {
             event.preventDefault()
-            const latitude = this.latInput.value
-            const longitude = this.lonInput.value
+
+            const latitude = this.getLatitude()
+            const longitude = this.getLongitude()
 
             if (latitude && longitude) {
                 this.submitBtn.innerText = 'Loading...'
@@ -276,8 +277,16 @@ export class CPlaceView implements IObserver {
         })
     }
 
-    update(places: IPlace[]) {
-        this.displayPlaces(places);
-        this.displayMarkers(places);
+    update(subject: CSubject) {
+        const { data, error } = subject.getState()
+
+        if (data) {
+            this.displayPlaces(data);
+            this.displayMarkers(data);
+        }
+
+        if (error) {
+            this.showErrorBlock(error)
+        }
     }
 }

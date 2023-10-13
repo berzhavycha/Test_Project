@@ -1,7 +1,3 @@
-interface SnakeCaseObject {
-    [key: string]: any;
-}
-
 const isObject = (obj: any): boolean => {
     return obj !== null && typeof obj === 'object';
 };
@@ -12,8 +8,8 @@ const snakeKeyToCamel = (str: string) => {
         .join('')
 }
 
-export const snakeToCamel = (obj: SnakeCaseObject): SnakeCaseObject => {
-    const camelCaseObj: SnakeCaseObject = {};
+export const snakeToCamel = (obj: any) => {
+    const camelCaseObj: any = {};
 
     for (const key in obj) {
         if (obj.hasOwnProperty(key)) {

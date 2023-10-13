@@ -1,4 +1,3 @@
-import { IPlace } from "../interfaces";
 import { CPlacesModel } from "../models/place.model";
 import { CPlaceView } from "../view/place.view";
 
@@ -15,20 +14,19 @@ export class CPlaceController {
         this.model.subscribeObserver(this.view)
     }
 
-    private showErrorBlock() {
-        if (this.view.errorBlock) {
-            this.view.errorBlock.style.display = 'block';
-        }
-    }
-
     handleFetchPlaces(latitude: number, longitude: number) {
+        try {
+            if (isNaN(latitude) || isNaN(longitude)) {
+                this.view.showErrorBlock("Invalid input. Please enter valid latitude and longitude.")
+                return
+            }
 
-        if (isNaN(latitude) || isNaN(longitude)) {
-            this.showErrorBlock()
-            return
+            this.model.memoizedFetchPlace(latitude, longitude)
+        } catch (err) {
+            if (err instanceof Error) {
+                this.model.updateState({ data: [], error: err.message });
+            }
         }
-
-        this.model.memoizedFetchPlace(latitude, longitude)
     }
 
     handleFilterPlaces(category: string) {
